@@ -1,0 +1,131 @@
+﻿<!DOCTYPE html>
+<html>
+  <style>
+    .content {
+      max-width: 500px;
+      margin: auto;
+    }
+    </style>
+  <body>
+    <div class="content">
+      <h2>Simple front-end for the REST API</h2>
+      <hr />
+      <h3>set key-value or Update key-value:</h3>
+
+      <p>key:</p>
+      <input id="id3" type="number" min="0" required />
+      <h4>value:</h4>
+      <input id="id4" tyop="text" required />
+      <p></p>
+      <button onclick="createPair()">Set</button>
+      <p id="p5"></p>
+      <div id="div4">
+        <p id="p4"></p>
+      </div>
+      <hr />
+      <h3>Value of key :</h3>
+      <input id="id1" type="number" min="0" required />
+      <button onclick="getValue()">OK</button>
+      <div id="div2">
+        <p id="p1"></p>
+      </div>
+      <hr />
+      <h3>history of key :</h3>
+      <input id="id2" type="number" min="0" required />
+      <button onclick="getHistory()">OK</button>
+      <div id="div3">
+        <p id="p3"></p>
+      </div>
+      <hr />
+      <h3>All pairs:</h3>
+      <div id="div1"></div>
+      <button onclick="getAll()">All Data</button>
+      <hr />
+    </div>
+    <script>
+      async function getAll() {
+        let res = await fetch("/keyvalues");
+        let data = await res.json();
+
+        // console.log(data)
+
+        for (var i = 0; i <= data.length; i++) {
+          const para = document.createElement("p");
+          const node = document.createTextNode(
+            `key: ${data[i].key} ---------------------- value: ${data[i].value}`
+          );
+          para.appendChild(node);
+          const element = document.getElementById("div1");
+          element.appendChild(para);
+        }
+      }
+
+      async function getValue() {
+        const input = document.getElementById("id1").value;
+        let res = await fetch(`/keyvalue/${input}`);
+        let data = await res.json();
+
+        document.getElementById("p1").innerHTML = `value: ${data.value}`;
+      }
+
+      async function getHistory() {
+        const input = document.getElementById("id2").value;
+        let res = await fetch(`/keyvalue/${input}`);
+        let data = await res.json();
+
+        console.log(data.history);
+
+        if (data.history.length === 0) {
+          document.getElementById("p3").innerHTML = "history is Empty!!";
+        } else {
+          document.getElementById("p3").innerHTML = `history: ${data.history}`;
+        }
+      }
+
+      async function createPair() {
+        const key = document.getElementById("id3").value;
+        const value = document.getElementById("id4").value;
+        try {
+          let res = await fetch(`/keyvalue/${key}`);
+          let data = await res.json();
+          document.getElementById(
+            "p5"
+          ).innerHTML = `update value of key:${data.key}`;
+
+          let res1 = await fetch(`/keyvalue/${key}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              value,
+            }),
+          });
+          let data1 = await res1.json();
+
+          document.getElementById(
+            "p5"
+          ).innerHTML = `key: ${data1.key} ---------------------- value: ${data1.value}`;
+        } catch {
+          document.getElementById("p5").innerHTML = "create new pair";
+
+          let res = await fetch(`/keyvalues`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              key,
+              value,
+            }),
+          });
+          let data = await res.json();
+
+          document.getElementById(
+            "p4"
+          ).innerHTML = `key: ${data.key} ---------------------- value: ${data.value}`;
+        }
+      }
+    </script>
+  </body>
+</html>
